@@ -1,5 +1,7 @@
 package com.Ex0;
 
+import javafx.util.Pair;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -43,11 +45,6 @@ public class Main {
 
 class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, KeyListener {
 
-    private static final long serialVersionUID = 1L;
-
-    /** The manager that handles the polygon/polyline creation and storage. */
-    private Scene scene = new Scene();
-
     public MyCanvas() {
 
         setSize(600, 480);
@@ -62,6 +59,9 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
 
         drawPolyline(g, scene.getPolyline());
         drawPolygons(g, scene.getPolygons());
+
+        if (fill_polygons)
+            fillPolygons(g);
 
     }
 
@@ -104,6 +104,64 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
 
         //Draw the polyline
         g.drawPolyline(loc_x, loc_y, total_size);
+
+    }
+
+    public void fillPolygons(Graphics g) {
+
+        /*
+         * For every polygon we find the minimum enclosing rectangle.
+         * Afterwards, iterate Ymax - Ymin + 1 times which is the number of
+         * scanlines. For each such scan line we obtain the intersection points
+         * with the polygon edges.
+         */
+        for (Polygon poly : scene.getPolygons()) {
+
+            //Minimum enclosing rectangle
+            Rectangle bounds = poly.getBounds();
+
+            int scan_lines = (int)(bounds.getMaxY() - bounds.getMinY() + 1);
+            for (int index = 0 ; index < scan_lines ; index++) {
+
+                //For each scanline find intersection point with polygon edges
+                int y_coord = (int)(bounds.getMinY() + index);
+                java.util.List<Point> intersections = new java.util.ArrayList<>();
+                boolean inside_polygon = false;
+                for (int x_coord = (int)bounds.getMinX(); x_coord < bounds.getMaxX() ; x_coord++)  {
+
+                    //Find the intersection points via iterating each coordinate until hitting the edge
+                    if (inside_polygon) {
+
+                        if (!poly.contains(x_coord, y_coord)) {
+                            intersections.add(new Point(x_coord, y_coord));
+                            inside_polygon = false;
+                        }
+
+                    }
+                    else {
+
+                        if (poly.contains(x_coord, y_coord)) {
+                            intersections.add(new Point(x_coord, y_coord));
+                            inside_polygon = true;
+                        }
+
+                    }
+
+                }
+
+                //Form pairs of intersections from the list and draw them
+                for (int pair_index = 0 ; pair_index < intersections.size() ; pair_index += 2) {
+
+                    Point first = intersections.get(pair_index);
+                    Point second = intersections.get(pair_index + 1);
+
+                    g.drawLine(first.x, first.y, second.x, second.y);
+
+                }
+
+            }
+
+        }
 
     }
 
@@ -173,10 +231,15 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
 
                 break;
             }
-            case KeyEvent.VK_F:
+            case KeyEvent.VK_F: {
 
+                fill_polygons = !fill_polygons;
+
+                //Redraw the loaded scene to update canvas
+                this.repaint();
+                
                 break;
-
+            }
             default: //Do nothing
         }
 
@@ -194,6 +257,13 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
         //Nothing to implement here.
     }
 
+    private static final long serialVersionUID = 1L;
+
+    /** The manager that handles the polygon/polyline creation and storage. */
+    private Scene scene = new Scene();
+
+    /** Flag that decides whether to fill polygons. */
+    private boolean fill_polygons = false;
 
 }
 
@@ -299,15 +369,13 @@ class Scene {
      * Creates a scene from a formatted scene string.
      * @param scene The formatted scene contents to load.
      */
-    public Scene(String scene) {
+    Scene(String scene) {
 
         java.util.List<Point> all_points = new java.util.ArrayList<>();
         java.util.List<Point> all_edges = new java.util.ArrayList<>();
 
         //Load all of the points and edges from the input
         BufferedReader bufReader = new BufferedReader(new StringReader(scene));
-
-        String line;
 
         /*
          * The process is:
