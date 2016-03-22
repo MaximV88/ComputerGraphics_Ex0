@@ -112,7 +112,7 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
         /*
          * For every polygon we find the minimum enclosing rectangle.
          * Afterwards, iterate Ymax - Ymin + 1 times which is the number of
-         * scanlines. For each such scan line we obtain the intersection points
+         * scan lines. For each such scan line we obtain the intersection points
          * with the polygon edges.
          */
         for (Polygon poly : scene.getPolygons()) {
@@ -123,11 +123,11 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
             int scan_lines = (int)(bounds.getMaxY() - bounds.getMinY() + 1);
             for (int index = 0 ; index < scan_lines ; index++) {
 
-                //For each scanline find intersection point with polygon edges
+                //For each scan line find intersection point with polygon edges
                 int y_coord = (int)(bounds.getMinY() + index);
                 java.util.List<Point> intersections = new java.util.ArrayList<>();
                 boolean inside_polygon = false;
-                for (int x_coord = (int)bounds.getMinX(); x_coord < bounds.getMaxX() ; x_coord++)  {
+                for (int x_coord = (int)bounds.getMinX(); x_coord <= bounds.getMaxX() ; x_coord++)  {
 
                     //Find the intersection points via iterating each coordinate until hitting the edge
                     if (inside_polygon) {
@@ -150,12 +150,16 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
                 }
 
                 //Form pairs of intersections from the list and draw them
-                for (int pair_index = 0 ; pair_index < intersections.size() ; pair_index += 2) {
+                for (int pair_index = 0 ; pair_index < intersections.size() ; pair_index++) {
 
-                    Point first = intersections.get(pair_index);
-                    Point second = intersections.get(pair_index + 1);
+                    if (pair_index % 2 == 1) {
 
-                    g.drawLine(first.x, first.y, second.x, second.y);
+                        Point first = intersections.get(pair_index - 1);
+                        Point second = intersections.get(pair_index);
+
+                        g.drawLine(first.x, first.y, second.x, second.y);
+
+                    }
 
                 }
 
@@ -237,7 +241,7 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
 
                 //Redraw the loaded scene to update canvas
                 this.repaint();
-                
+
                 break;
             }
             default: //Do nothing
