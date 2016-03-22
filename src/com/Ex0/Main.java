@@ -1,3 +1,4 @@
+
 package com.Ex0;
 
 import javafx.util.Pair;
@@ -133,7 +134,9 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
                     if (inside_polygon) {
 
                         if (!poly.contains(x_coord, y_coord)) {
-                            intersections.add(new Point(x_coord, y_coord));
+
+                            //The real intersection has happened one step prior
+                            intersections.add(new Point(x_coord - 1, y_coord));
                             inside_polygon = false;
                         }
 
