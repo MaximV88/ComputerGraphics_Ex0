@@ -416,11 +416,8 @@ class Scene {
         //Number of vertices
         int limit = 0;
 
-        try {
-            limit = Integer.parseInt(bufReader.readLine());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try { limit = Integer.parseInt(bufReader.readLine()); }
+        catch (IOException e) { e.printStackTrace(); }
 
         for (int index = 0; index < limit; index++) {
 
@@ -440,11 +437,8 @@ class Scene {
         }
 
         //Number of edges
-        try {
-            limit = Integer.parseInt(bufReader.readLine());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try { limit = Integer.parseInt(bufReader.readLine()); }
+        catch (IOException e) { e.printStackTrace(); }
 
         for (int index = 0; index < limit; index++) {
 
