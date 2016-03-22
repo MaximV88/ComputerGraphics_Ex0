@@ -61,7 +61,7 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
         drawPolygons(g, scene.getPolygons());
 
         if (fill_polygons)
-            fillPolygons(g);
+            fillPolygons(g, scene.getPolygons());
 
     }
 
@@ -107,7 +107,7 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
 
     }
 
-    public void fillPolygons(Graphics g) {
+    private void fillPolygons(Graphics g, java.util.List<Polygon> polys) {
 
         /*
          * For every polygon we find the minimum enclosing rectangle.
@@ -115,7 +115,7 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
          * scan lines. For each such scan line we obtain the intersection points
          * with the polygon edges.
          */
-        for (Polygon poly : scene.getPolygons()) {
+        for (Polygon poly : polys) {
 
             //Minimum enclosing rectangle
             Rectangle bounds = poly.getBounds();
@@ -169,8 +169,21 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
 
     }
 
+    private void loadScene(Scene scene_to_load) {
+
+        scene = scene_to_load;
+        fill_polygons = false;
+
+        //Redraw the loaded scene to update canvas
+        this.repaint();
+
+    }
     @Override
     public void mouseReleased(MouseEvent e) {
+
+        //Prevent interaction while polygons are filled
+        if (fill_polygons) return;
+
         scene.setPolylineSection(e.getPoint());
         scene.endPolylineSection();
         this.repaint();
@@ -186,6 +199,10 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
 
     @Override
     public void mousePressed(MouseEvent e) {
+
+        //Prevent interaction while polygons are filled
+        if (fill_polygons) return;
+
         scene.setPolylineSection(e.getPoint());
         this.repaint();
     }
@@ -200,6 +217,10 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
 
     @Override
     public void mouseDragged(MouseEvent e) {
+
+        //Prevent interaction while polygons are filled
+        if (fill_polygons) return;
+
         scene.setPolylineSection(e.getPoint());
         this.repaint();
     }
@@ -215,14 +236,8 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
                 SceneManager manager = new SceneManager();
                 Scene newScene = manager.loadSceneWithMenu();
 
-                if (newScene != null) {
-
-                    scene = newScene;
-
-                    //Redraw the loaded scene to update canvas
-                    this.repaint();
-
-                }
+                if (newScene != null)
+                    loadScene(newScene);
 
                 break;
             }
@@ -230,12 +245,20 @@ class MyCanvas extends Canvas implements MouseListener, MouseMotionListener, Key
             //If S key was hit, save the scene
             case KeyEvent.VK_S: {
 
+                //Don't allow saving of scene when there are unfinished shapes
+                if (!scene.getPolyline().isEmpty())
+                    return;
+
                 SceneManager manager = new SceneManager();
                 manager.saveSceneWithMenu(scene);
 
                 break;
             }
             case KeyEvent.VK_F: {
+
+                //Don't allow filling of polygons when there are unfinished shapes
+                if (!scene.getPolyline().isEmpty())
+                    return;
 
                 fill_polygons = !fill_polygons;
 
